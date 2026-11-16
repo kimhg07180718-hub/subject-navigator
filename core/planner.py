@@ -11,6 +11,14 @@ def fixed_courses(offerings):
     return plan
 
 
+def required_names(offerings):
+    """모두 듣는 공통·지정 과목(필수 과목)의 이름 set. 예: 미적분Ⅰ, 화법과 언어"""
+    names = set()
+    for name, grade, semester in fixed_courses(offerings):
+        names.add(name)
+    return names
+
+
 def term_plan(plan, grade, semester):
     """계획에서 한 학기(grade, semester)에 든 줄만 골라 돌려준다."""
     term = []

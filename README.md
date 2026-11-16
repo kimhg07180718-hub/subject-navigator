@@ -52,13 +52,13 @@ subject-navigator/
 ├── core/                  # streamlit 없이 순수 Python (list·dict·set, csv 모듈)
 │   ├── config.py          # 기준값 상수 (점수, 학기 순서, 시트 이름)
 │   ├── data.py            # load_csv, to_numbers, check_names, check_repeats, load_all, offered_text
-│   ├── recommend.py       # split_courses, need_count, rule_text, find_rules, needed_rules, field_names,
+│   ├── recommend.py       # split_courses, need_count, rule_text, find_rules, needed_rules, without_required, field_names,
 │   │                      # universities_for, score_courses, score_word, search_courses
-│   ├── planner.py         # fixed_courses, term_plan, build_plan
+│   ├── planner.py         # fixed_courses, required_names, term_plan, build_plan
 │   ├── validate.py        # total_credits, check_* 5개 (check_recommendations는 화면 요약에도 씀), validate
 │   └── plan_io.py         # save_plan, read_rows, load_plan, load_choice, remove_unknown
 ├── data/                  # CSV 5개 (설명은 data/README.md)
-├── tests/                 # pytest 테스트 23개
+├── tests/                 # pytest 테스트 25개
 └── requirements.txt
 ```
 
@@ -81,7 +81,7 @@ CSV 5개 → load_all → score_courses → build_plan → (학생이 직접 수
 | 기능 | 파일·함수 | 화면 | 테스트 |
 |---|---|---|---|
 | F1 계열·학과 선택 | `common.sidebar_choice`, `recommend.field_names`, `universities_for` (웹과 콘솔이 같이 씀) | 모든 화면의 사이드바, 콘솔 메뉴 | (화면에서 확인) |
-| F2 권장 과목 매칭 | `recommend.find_rules`, `needed_rules`, `score_courses`, `score_word`, `search_courses` | 추천 과목의 탭 3개, 홈의 '권장 과목 규칙 N개', 계획 칸의 '강력 추천/추천/참고' | `test_score_core_higher_than_recommend`, `test_search_ignores_spaces`, `test_needed_rules_drops_none`, `test_score_word` |
+| F2 권장 과목 매칭 | `recommend.find_rules`, `needed_rules`, `without_required`, `planner.required_names`, `score_courses`, `score_word`, `search_courses` | 추천 과목의 탭 3개(모두 듣는 필수 과목은 '대학이 권하는 과목'에서 뺌), 홈의 '권장 과목 규칙 N개', 계획 칸의 '강력 추천/추천/참고' | `test_score_core_higher_than_recommend`, `test_search_ignores_spaces`, `test_needed_rules_drops_none`, `test_required_names`, `test_without_required`, `test_score_word` |
 | F3 이수 계획 자동 생성 | `planner.fixed_courses`, `build_plan` | 내 이수 계획의 '추천대로 다시 짜기' (2학년이면 '2학년은 두고 빈자리 채우기') | `test_good_plan_has_no_errors`, `test_taken_courses_are_kept` |
 | F4 계획 직접 수정 | 선택군별 고르기 칸, `planner.term_plan`, `validate.total_credits` | 내 이수 계획의 학기별 상자와 '4과목 중 N과목' 표시, 맨 위 요약 숫자 | `test_total_credits` |
 | F5 규칙 검사와 경고 | `validate.validate`와 `check_*` 함수 5개 | 내 이수 계획 맨 위 상태 상자, '못 채운 권장 규칙'·'오류' 숫자, '검사 결과' (오류·주의 상자, 안내는 접어 둠) | `test_group_too_many`, `test_group_too_few`, `test_duplicate_course`, `test_prereq_order`, `test_missing_core_recommendation`, `test_not_offered_recommendation_is_info`, `test_unmeetable_rule_still_checks_offered_courses` |

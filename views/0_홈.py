@@ -2,7 +2,8 @@
 import streamlit as st
 
 from common import choice_badges, current_choice, load_data_or_stop, next_step
-from core.recommend import find_rules, needed_rules
+from core.planner import required_names
+from core.recommend import find_rules, without_required
 
 data = load_data_or_stop()
 choice = current_choice()
@@ -11,7 +12,8 @@ st.title("고교학점제 과목 선택 내비게이터", icon=":material/explor
 st.write("희망 학과와 목표 대학을 고르면, 광주 광덕고 편성표 안에서 2·3학년 선택과목 계획을 "
          "짜 주고 선택 규칙도 검사해 줘요.")
 
-rules = needed_rules(find_rules(choice["학과"], choice["대학"], data["recs"]))  # 추천 과목 화면과 같은 수
+# 추천 과목 화면과 같은 수: 필수 과목만으로 채워지는 규칙은 세지 않는다
+rules = without_required(find_rules(choice["학과"], choice["대학"], data["recs"]), required_names(data["offerings"]))
 st.markdown(f"**지금 고른 진로** {choice_badges(choice)} · 권장 과목 규칙 {len(rules)}개")
 
 # 사용 순서: 단계마다 카드 하나. page가 None이면 이 화면 밖(사이드바, 저장 칸)에서 하는 일이다

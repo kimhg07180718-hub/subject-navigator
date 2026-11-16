@@ -47,6 +47,20 @@ def needed_rules(rules):
     return kept
 
 
+def without_required(rules, required):
+    """[F2] 규칙에서 모두 듣는 필수 과목(required)을 뺀다. 필수 과목만으로 채워지는 규칙은 통째로 빼고,
+    남은 규칙은 (규칙, 남은 과목 list, 더 들어야 할 과목 수)로 돌려준다.
+    예: '대수, 미적분Ⅰ, 기하, 미적분Ⅱ 중 3과목 이상' → (규칙, ['기하', '미적분Ⅱ'], 1)"""
+    shown = []
+    for rule in needed_rules(rules):
+        names = split_courses(rule)
+        rest = [n for n in names if n not in required]
+        need = need_count(rule) - (len(names) - len(rest))  # 필수 과목은 저절로 채워진다
+        if need > 0:
+            shown.append((rule, rest, need))
+    return shown
+
+
 def field_names(majors):
     """[F1] majors.csv에 나온 순서대로 계열 이름 list를 만든다 (같은 이름은 한 번만)."""
     fields = []

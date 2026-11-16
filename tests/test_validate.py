@@ -1,6 +1,6 @@
 """[F2·F3·F5] 일부러 틀린 계획을 만들어 경고가 나오는지 확인한다. 실행: pytest"""
-from core.planner import build_plan, fixed_courses, term_plan
-from core.recommend import find_rules, needed_rules, score_courses, score_word, search_courses
+from core.planner import build_plan, fixed_courses, required_names, term_plan
+from core.recommend import find_rules, needed_rules, score_courses, score_word, search_courses, without_required
 from core.validate import check_recommendations, total_credits, validate
 
 
@@ -101,6 +101,26 @@ def test_needed_rules_drops_none(data):
     assert len(needed_rules(find_rules("컴퓨터공학", "연세대", data["recs"]))) == 3
 
 
+def test_required_names(data):
+    """모두 듣는 공통·지정 과목만 필수 과목이다. 선택군에서 고르는 기하는 아니다."""
+    required = required_names(data["offerings"])
+    assert "미적분Ⅰ" in required
+    assert "화법과 언어" in required
+    assert "기하" not in required
+
+
+def test_without_required():
+    """[F2] 필수 과목만으로 채워지는 규칙은 빼고, 섞인 규칙은 남은 과목과 남은 개수만 남긴다."""
+    rules = [{"rule": "single", "courses": "미적분Ⅰ", "count": 0},
+             {"rule": "any_of", "courses": "물리학|화학", "count": 0},
+             {"rule": "any_of", "courses": "확률과 통계|기하", "count": 0},
+             {"rule": "at_least", "courses": "대수|미적분Ⅰ|기하|미적분Ⅱ", "count": 3},
+             {"rule": "none", "courses": "", "count": 0}]
+    shown = without_required(rules, {"대수", "미적분Ⅰ", "확률과 통계"})
+    result = [(names, need) for rule, names, need in shown]
+    assert result == [(["물리학", "화학"], 1), (["기하", "미적분Ⅱ"], 1)]
+
+
 def test_score_word():
     """추천 점수를 말로 바꾼다: 3점 이상 강력 추천, 2점 추천, 1점 참고, 0점 빈 글자."""
     assert score_word(5) == "강력 추천"
@@ -128,9 +148,9 @@ def test_taken_courses_are_kept(data):
 
 
 def test_total_credits(data):
-    """3학년 1학기: 확률과 통계 4학점 + 선택 6과목 × 3학점 = 22학점."""
+    """3학년 1학기: 지정 과목(확률과 통계, 화법과 언어) 4학점씩 + 선택 6과목 × 3학점 = 26학점."""
     plan, rules = make_plan(data)
-    assert total_credits(term_plan(plan, 3, 1), data["offerings"]) == 22
+    assert total_credits(term_plan(plan, 3, 1), data["offerings"]) == 26
 
 
 def test_search_ignores_spaces(data):

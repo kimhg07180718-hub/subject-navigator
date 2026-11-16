@@ -5,8 +5,9 @@ import streamlit as st
 from common import current_choice, load_data_or_stop, next_step, page_top
 from core.config import NO_UNIVERSITY, SCORE_CORE, SCORE_FIELD_AREA, SCORE_RECOMMEND, SCORE_SAME_FIELD
 from core.data import offered_text
-from core.recommend import (find_rules, need_count, needed_rules, score_courses, score_word, search_courses,
-                            split_courses)
+from core.planner import required_names
+from core.recommend import (find_rules, needed_rules, score_courses, score_word, search_courses, split_courses,
+                            without_required)
 
 data = load_data_or_stop()
 choice = current_choice()
@@ -28,31 +29,44 @@ page_top(2, "추천 과목", ":material/star:", "대학이 권하는 과목을 �
 scores = score_courses(major, university, data["majors"], data["recs"], data["courses"])
 tab1, tab2, tab3 = st.tabs(["대학이 권하는 과목", "추천 점수 순위", "과목 찾기"])
 
-# 1) 대학이 발표한 권장 과목: 한 과목짜리 규칙은 표 하나로, 여러 과목 중 고르는 규칙은 카드로
+# 1) 대학이 발표한 권장 과목: 한 과목짜리 규칙은 표 하나로, 여러 과목 중 고르는 규칙은 카드로.
+#    모두 듣는 필수 과목(공통·지정)은 저절로 채워지므로 빼고 보여 준다
 with tab1:
-    rules = needed_rules(find_rules(major, university, data["recs"]))  # '따로 정한 권장 과목 없음' 규칙은 뺀다
-    if len(rules) == 0:
+    required = required_names(offerings)
+    all_rules = find_rules(major, university, data["recs"])
+    shown = without_required(all_rules, required)  # [(규칙, 남은 과목 list, 더 들어야 할 수)]
+    hidden = []  # 규칙에 나오지만 필수 과목이라 뺀 과목
+    for rule in all_rules:
+        for name in split_courses(rule):
+            if name in required and name not in hidden:
+                hidden.append(name)
+
+    if len(needed_rules(all_rules)) == 0:  # '따로 정한 권장 과목 없음'만 있거나 자료가 없음
         title = "이 대학·학과는 따로 정한 권장 과목이 없어요"
         if university == NO_UNIVERSITY:  # majors.csv에만 있고 권장 과목 자료가 없는 학과
             title = "이 학과는 아직 권장 과목 자료가 없어요"
         st.info("대신 계열에 맞는 교과로 점수를 매겼어요. 대학 입학처 안내도 확인해 보세요.",
                 title=title, icon=":material/search_off:")
+    elif len(shown) == 0:
+        st.success("학교에서 모두 듣는 필수 과목만으로 채워져서, 따로 챙길 과목은 없어요.",
+                   title="이 대학·학과가 권하는 과목은 모두 필수 과목이에요", icon=":material/check_circle:")
     else:
         st.markdown(":violet-badge[핵심] 꼭 듣기를 권하는 과목 · :blue-badge[권장] 되도록 듣기를 권하는 과목")
+    if len(hidden) > 0:
+        st.caption(f"모두 듣는 필수 과목({', '.join(hidden)})은 저절로 채워져서 목록에서 뺐어요.")
 
     singles = []  # 한 과목짜리 규칙 → 표의 한 줄
     choices = []  # 여러 과목 중 고르는 규칙 → 카드 하나
     cannot = 0    # 우리 학교에 열리는 과목이 모자라서 다 채울 수 없는 규칙 수
-    for rule in rules:
-        names = split_courses(rule)
+    for rule, names, need in shown:
         offered = [n for n in names if offered_text(n, offerings) != "미개설"]
-        if len(offered) < need_count(rule):
+        if len(offered) < need:
             cannot += 1
-        if rule["rule"] == "single":
+        if len(names) == 1:  # 한 과목짜리 규칙, 또는 필수 과목을 빼니 한 과목만 남은 규칙
             singles.append({"과목": names[0], "구분": rule["level"], "우리 학교": open_mark(names[0]),
                             "확인 날짜": rule["checked"], "원문": rule["source"], "메모": rule["note"]})
         else:
-            choices.append(rule)
+            choices.append((rule, names, need))
 
     if len(singles) > 0:
         st.markdown(f"**한 과목씩 정한 권장 과목 · {len(singles)}과목**")
@@ -60,12 +74,11 @@ with tab1:
             "구분": st.column_config.TextColumn("구분", help="핵심: 꼭 듣기를 권해요. 권장: 되도록 들으면 좋아요."),
             "원문": st.column_config.LinkColumn("원문", display_text="보기")})
 
-    for rule in choices:
-        names = split_courses(rule)
+    for rule, names, need in choices:
         level = rule["level"]
         with st.container(border=True):
             st.markdown(f":{LEVEL_COLOR.get(level, 'gray')}-badge[{level}] "
-                        f"**아래 {len(names)}과목 중 {need_count(rule)}과목 이상**")
+                        f"**아래 {len(names)}과목 중 {need}과목 이상**")
             lines = []
             missing = []
             for name in names:
