@@ -1,62 +1,22 @@
-"""[F6]·[데이터] 파일 저장·불러오기와 예외 처리를 확인한다."""
+"""[F6]·[데이터] 엑셀 저장과 CSV 읽기 예외 처리를 확인한다."""
 import os
 import shutil
 
 import pytest
-from openpyxl import Workbook
+from openpyxl import load_workbook
 
-from core.data import load_all
-from core.plan_io import load_choice, load_plan, remove_unknown, save_plan
+from app import load_all, save_plan
 
 
-def test_save_and_load(tmp_path):
-    """저장한 계획을 다시 읽으면 똑같아야 한다."""
+def test_save_plan(tmp_path):
+    """저장한 엑셀 파일에 계획, 검사 결과, 고른 진로가 시트마다 들어 있어야 한다."""
     plan = [("미적분Ⅰ", 2, 2), ("미적분Ⅱ", 3, 1)]
     path = tmp_path / "plan.xlsx"
     save_plan(plan, [("주의", "예시 메시지")], path, {"학과": "컴퓨터공학", "대학": "연세대"})
-    assert load_plan(path) == plan
-    assert load_choice(path) == {"학과": "컴퓨터공학", "대학": "연세대"}
-
-
-def test_wrong_file_is_rejected(tmp_path):
-    """엑셀이 아닌 파일이나 모양이 다른 엑셀은 ValueError로 알려 준다."""
-    text_file = tmp_path / "memo.xlsx"
-    text_file.write_text("엑셀이 아님", encoding="utf-8")
-    with pytest.raises(ValueError):
-        load_plan(text_file)
-
-    other = tmp_path / "other.xlsx"  # '계획' 시트가 없는 엑셀
-    wb = Workbook()
-    wb.active.append(["이름", "점수"])
-    wb.save(other)
-    with pytest.raises(ValueError, match="시트가 없어요"):
-        load_plan(other)
-
-    wrong_header = tmp_path / "wrong_header.xlsx"  # '계획' 시트는 있지만 열 이름이 다름
-    wb = Workbook()
-    wb.active.title = "계획"
-    wb.active.append(["이름", "점수", "반"])
-    wb.save(wrong_header)
-    with pytest.raises(ValueError, match="열 이름"):
-        load_plan(wrong_header)
-
-
-def test_damaged_file_is_rejected(tmp_path):
-    """저장한 파일의 뒷부분이 잘려 손상되면 ValueError로 알려 준다."""
-    path = tmp_path / "plan.xlsx"
-    save_plan([("미적분Ⅱ", 3, 1)], [], path)
-    data = path.read_bytes()
-    path.write_bytes(data[: len(data) // 2])
-    with pytest.raises(ValueError):
-        load_plan(path)
-
-
-def test_unknown_course_is_removed(data):
-    """개설표에 없는 과목 줄은 빼고 경고한다."""
-    plan = [("미적분Ⅱ", 3, 1), ("없는 과목", 3, 1)]
-    kept, warnings = remove_unknown(plan, data["offerings"])
-    assert kept == [("미적분Ⅱ", 3, 1)]
-    assert len(warnings) == 1 and "없는 과목" in warnings[0]
+    wb = load_workbook(path)
+    assert list(wb["계획"].iter_rows(values_only=True)) == [("학년", "학기", "과목"), (2, 2, "미적분Ⅰ"), (3, 1, "미적분Ⅱ")]
+    assert list(wb["검사 결과"].iter_rows(values_only=True)) == [("수준", "메시지"), ("주의", "예시 메시지")]
+    assert list(wb["선택"].iter_rows(values_only=True)) == [("학과", "컴퓨터공학"), ("대학", "연세대")]
 
 
 def test_missing_data_file(tmp_path):

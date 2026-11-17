@@ -1,7 +1,6 @@
 """[F2·F3·F5] 일부러 틀린 계획을 만들어 경고가 나오는지 확인한다. 실행: pytest"""
-from core.planner import build_plan, fixed_courses, required_names, term_plan
-from core.recommend import find_rules, needed_rules, score_courses, score_word, search_courses, without_required
-from core.validate import check_recommendations, total_credits, validate
+from app import (build_plan, check_recommendations, find_rules, fixed_courses, needed_rules, required_names,
+                 score_courses, score_word, search_courses, term_plan, total_credits, validate, without_required)
 
 
 def make_plan(data, major="컴퓨터공학", university="연세대"):
@@ -92,6 +91,14 @@ def test_unmeetable_rule_still_checks_offered_courses():
     assert ("안내", "가상대 가상학의 핵심 과목은 4과목 이상인데 우리 학교에는 2과목만 열려요. "
             "공동교육과정이나 온라인 강좌로 들을 수 있는지 선생님께 확인해 보세요.") in issues
     assert ("주의", "가상대 가상학의 핵심 과목 중 우리 학교에 열리는 미적분Ⅱ를 계획에 넣지 않았어요.") in issues
+
+
+def test_rule_with_no_offered_course_names_courses():
+    """[F5] 규칙의 과목이 하나도 안 열리면 '0과목만 열려요' 대신 과목 이름을 알려 준다."""
+    rule = {"university": "가상대", "major": "가상학", "rule": "at_least", "courses": "없는 과목|또 없는 과목",
+            "count": 1, "level": "권장"}
+    issues = check_recommendations([], [rule], {"기하"})
+    assert issues[0][1].startswith("없는 과목 또는 또 없는 과목은 우리 학교에 열리지 않아요.")
 
 
 def test_needed_rules_drops_none(data):

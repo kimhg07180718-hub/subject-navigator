@@ -36,21 +36,15 @@ echo ok> ".venv\ready.txt"
 echo.
 echo ===== 과목 선택 내비게이터 =====
 echo  1. 웹 앱 열기 (추천)
-echo  2. 콘솔 버전 실행
-echo  3. 테스트 돌리기
+echo  2. 테스트 돌리기
 echo.
 set "CHOICE=1"
 set /p "CHOICE=번호를 고르세요 (그냥 Enter는 1): "
-if "%CHOICE%"=="2" goto console
-if "%CHOICE%"=="3" goto test
+if "%CHOICE%"=="2" goto test
 
 echo.
 echo 잠시 뒤 브라우저에 앱이 열려요. 끝내려면 이 창을 닫으세요.
 ".venv\Scripts\python.exe" -m streamlit run app.py
-goto end
-
-:console
-".venv\Scripts\python.exe" cli.py
 goto end
 
 :test

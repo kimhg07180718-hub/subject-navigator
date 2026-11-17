@@ -3,7 +3,7 @@ import os
 
 import pytest
 
-from core.data import load_all
+from app import load_all
 
 DATA_FOLDER = os.path.join(os.path.dirname(__file__), "..", "data")
 

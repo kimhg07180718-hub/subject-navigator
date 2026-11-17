@@ -30,12 +30,10 @@ fi
 echo
 echo "===== 과목 선택 내비게이터 ====="
 echo " 1. 웹 앱 열기 (추천)"
-echo " 2. 콘솔 버전 실행"
-echo " 3. 테스트 돌리기"
+echo " 2. 테스트 돌리기"
 read -r -p "번호를 고르세요 (그냥 Enter는 1): " choice
 case "$choice" in
-    2) .venv/bin/python cli.py ;;
-    3) .venv/bin/python -m pytest -q ;;
+    2) .venv/bin/python -m pytest -q ;;
     *) echo "잠시 뒤 브라우저에 앱이 열려요. 끝내려면 이 창을 닫거나 Ctrl+C를 누르세요."
        .venv/bin/python -m streamlit run app.py ;;
 esac
