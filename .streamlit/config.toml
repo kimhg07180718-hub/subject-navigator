@@ -1,0 +1,30 @@
+# 실행할 때 쓰는 Streamlit 설정
+[server]
+# 처음 실행할 때 이메일을 묻지 않게 한다
+showEmailPrompt = false
+# 코드를 저장하면 화면을 바로 다시 그린다 (아래 toolbarMode 때문에 Rerun 버튼이 숨으므로)
+runOnSave = true
+
+[browser]
+# 사용 통계를 보내지 않는다
+gatherUsageStats = false
+
+[client]
+# 오른쪽 위 'Deploy', 'Rerun' 같은 개발자 버튼을 숨긴다
+toolbarMode = "viewer"
+
+[theme]
+# 밝은 화면을 기본으로 쓴다
+base = "light"
+# 강조색: 차분한 파랑 (흰 글자와 대비 6.7:1). 빨강은 '오류'에만 쓰이게 남겨 둔다
+primaryColor = "#1d4ed8"
+# 글자색을 조금 더 진하게 해서 회색 작은 글씨(caption)도 잘 읽히게 한다
+textColor = "#111827"
+# 회색 배지(:gray-badge[])의 글자를 진하게 해서 잘 읽히게 한다
+grayTextColor = "#4b5563"
+# 윈도우는 맑은 고딕, 맥은 애플 산돌고딕. 컴퓨터에 깔린 글꼴이라 인터넷 없이도 된다
+font = "'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif"
+# 제목 크기를 줄여 첫 화면에 내용이 더 많이 보이게 한다 (title, header, subheader 순서)
+headingFontSizes = ["2rem", "1.5rem", "1.25rem"]
+# 입력 칸 테두리를 보여서 칸이 어디까지인지 잘 보이게 한다
+showWidgetBorder = true
